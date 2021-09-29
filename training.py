@@ -5,7 +5,6 @@ import os
 from datetime import datetime
 from shutil import copyfile
 import time
-import configparser
 
 #Training Parameters
 training_ratio = 0.7
@@ -30,16 +29,17 @@ DARKNET_EXECUTABLE = r"<PATH_TO>\darknet.exe"
 RENAME_SCHEMA = "yolov3-%YYYY%MM%DD.cfg"
 ACCEPT_IMAGES_TYPE = [".jpeg", ".png", ".jpg", ".PNG"]
 
-
+#Create output folder using todate date
 outputFolder = os.path.join(Path(outputFolder),f"{datetime.today().strftime('%Y')}-{datetime.today().strftime('%m')}-{datetime.today().strftime('%d')}")
 if not os.path.exists(outputFolder):
     os.mkdir(outputFolder)
 
 
 assert width%32==0 and height%32==0, 'width and height value must be the multiple of 32'
-assert training_ratio>0 and TRAINING_RATIO<1, 'TRAINING_RATIO should between 0 to 1'
+assert training_ratio>0 and training_ratio<1, 'TRAINING_RATIO should between 0 to 1'
 assert batch%subdivisions == 0, 'batch should the multiple of subdivisions'
 
+#Validate dataset
 dataset = []
 for directory in directories:
 	files = [f for f in os.listdir(directory) if f.endswith(tuple(ACCEPT_IMAGES_TYPE)) ]
@@ -56,6 +56,7 @@ for directory in directories:
 	
 assert len(dataset)>100, 'Dataset must have more than 100 images'
 
+#Shuffle dataset
 print(f"Find {str(len(dataset))} images")
 random.shuffle(dataset)
 cutOffIdx = round(len(dataset) * training_ratio)
@@ -70,6 +71,7 @@ if cutOffIdx>max_batches:
 	max_batches = int(cutOffIdx * 2)
 	steps=f"{int(max_batches*.8)},{int(max_batches*.9)}"
 
+#Read and update network config
 cfg = []
 with open(TRAINING_CFG_TEMPLATE) as f:
 	line = f.readlines()
@@ -95,33 +97,37 @@ for no, line in enumerate(cfg):
 
 RENAME_SCHEMA = RENAME_SCHEMA.replace("%YYYY",datetime.today().strftime('%Y')).replace("%MM",datetime.today().strftime('%m')).replace("%DD",datetime.today().strftime('%d'))
 
+#Write network config
 NEW_CFG = os.path.join(Path(outputFolder),RENAME_SCHEMA)
 copyfile(TRAINING_CFG_TEMPLATE, NEW_CFG)
 f= open(NEW_CFG,"w+")
 f.write(''.join(cfg))
 f.close()
 
-
+#Copy Pretrained Convolutional Weights to output directory
 copyfile(PretrainedWeight, os.path.join(outputFolder,'yolov3-tiny.conv.15'))
 
+#Create folder structure
 if not os.path.exists(os.path.join(outputFolder,'data')):
     os.mkdir(os.path.join(outputFolder,'data'))
 if not os.path.exists(os.path.join(outputFolder,'backup')):
     os.mkdir(os.path.join(outputFolder,'backup'))
 
+#Write training dataset
 trainingFiles = os.path.join(outputFolder,"data","train.txt")
 print(f"Writing: {str(trainingFiles)}")
 f= open(trainingFiles,"w+")
 f.write('\n'.join(dataset[0:cutOffIdx]))
 f.close()
 
+#Write testing dataset
 testingFiles = os.path.join(outputFolder,"data","test.txt")
 print(f"Writing: {str(testingFiles)}")
 f= open(testingFiles,"w+")
 f.write('\n'.join(dataset[cutOffIdx:len(dataset)]))
 f.close()
 
-
+#Generate fake data
 newDataContent = f"classes= {classes}\n" \
 				f"train  = {trainingFiles}\n" \
 				f"valid  = {testingFiles}\n" \
@@ -131,17 +137,17 @@ f= open(os.path.join(outputFolder,'data','setting.data'),"w+")
 f.write(newDataContent)
 f.close()
 
+#Generate fake classes.name
 tempNames = ['N/A'] * classes
 f= open(os.path.join(outputFolder,'data','setting.names'),"w+")
 f.write('\n'.join(tempNames))
 f.close()
 
 os.chdir(Path(outputFolder))
-
-
 cmd = f"{DARKNET_EXECUTABLE} detector train {os.path.join(outputFolder,'data','setting.data')} {os.path.join(outputFolder,RENAME_SCHEMA)} {os.path.join(outputFolder,'yolov3-tiny.conv.15')} "
 print("Execute: "+cmd)
 
+#Start training
 start = time.time()
 os.system(cmd)
 end = time.time()
