@@ -28,7 +28,7 @@ DARKNET_EXECUTABLE = r"<PATH>\darknet.exe"
 RENAME_SCHEMA = "yolov3-%YYYY%MM%DD.cfg"
 ACCEPT_IMAGES_TYPE = [".jpeg", ".png", ".jpg", ".PNG"]
 
-#Create output folder using todate date
+#Create output folder using today date
 outputFolder = os.path.join(Path(outputFolder),f"{datetime.today().strftime('%Y')}-{datetime.today().strftime('%m')}-{datetime.today().strftime('%d')}")
 if not os.path.exists(outputFolder):
     os.mkdir(outputFolder)
