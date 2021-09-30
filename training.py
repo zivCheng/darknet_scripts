@@ -8,10 +8,9 @@ import time
 
 #Training Parameters
 training_ratio = 0.7
-outputFolder = r"D:\darknet\training"
+outputFolder = r"<OUTPUT_FOLDER>"
 directories = [
-	r"D:\dataset\360Pedestrian\360Ped\Dataset",
-	r"D:\dataset\360Pedestrian\task_2021.09.22-2021_09_24_03_32_18-yolo 1.1\obj_train_data"
+	r"<PATH_TO_DATASET>",
 ]
 
 #CFG Parameters
@@ -23,9 +22,9 @@ height=608
 
 
 #Darknet Parameters
-TRAINING_CFG_TEMPLATE = r"D:\darknet\darknetv3\build\darknet\x64\cfg\yolov3-tiny.cfg"
-PretrainedWeight=r'D:\darknet\darknetv3\build\darknet\x64\yolov3-tiny.conv.15'
-DARKNET_EXECUTABLE = r"D:\darknet\darknetv3\build\darknet\x64\darknet.exe"
+TRAINING_CFG_TEMPLATE = r"<PATH>\yolov3-tiny.cfg"
+PRETRAINED_WEIGHT=r'<PATH>\yolov3-tiny.conv.15'
+DARKNET_EXECUTABLE = r"<PATH>\darknet.exe"
 RENAME_SCHEMA = "yolov3-%YYYY%MM%DD.cfg"
 ACCEPT_IMAGES_TYPE = [".jpeg", ".png", ".jpg", ".PNG"]
 
@@ -64,9 +63,8 @@ print(f"Dataset(Training:Testing): {str(cutOffIdx)} : {str(len(dataset)-cutOffId
 
 
 
-max_batches=classes*2000 #max_batches: classes*2000, but not less than number of training images and not less than 6000
-steps=f"{int(max_batches*.8)},{int(max_batches*.9)}" #max_batches*.8, max_batches*.9
-#filters=(classes+5)*3 #if yolo: filters=(classes + 5)x3 elif Gaussian_yolo filters=(classes + 9)x3
+max_batches=classes*2000
+steps=f"{int(max_batches*.8)},{int(max_batches*.9)}"
 if cutOffIdx>max_batches:
 	max_batches = int(cutOffIdx * 2)
 	steps=f"{int(max_batches*.8)},{int(max_batches*.9)}"
@@ -113,7 +111,7 @@ f.write(''.join(cfg))
 f.close()
 
 #Copy Pretrained Convolutional Weights to output directory
-copyfile(PretrainedWeight, os.path.join(outputFolder,'yolov3-tiny.conv.15'))
+copyfile(PRETRAINED_WEIGHT, os.path.join(outputFolder,'yolov3-tiny.conv.15'))
 
 #Create folder structure
 if not os.path.exists(os.path.join(outputFolder,'data')):
