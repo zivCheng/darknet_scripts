@@ -48,7 +48,7 @@ for directory in directories:
 		imageExtension = os.path.splitext(f)[1]
 		textFilename = os.path.splitext(f)[0]
 		textFile= textFilename+".txt"
-		if os.path.exists(os.path.join(directory,textFile)):	
+		if os.path.exists(os.path.join(directory,textFile))  and os.path.getsize(os.path.join(directory,textFile)) > 0:	
 			valid_files.append(os.path.join(directory,f))
 	dataset.extend(valid_files) 
 	print(f"Find: {str(len(valid_files))}/{str(len(files))} images in {directory}")
